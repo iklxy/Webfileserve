@@ -1,0 +1,46 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build serve",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-std=c++17",
+                "-g",
+                "serve.cpp",
+                "-o",
+                "serve",
+                "-Wall",
+                "-Wextra"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/HttpServe"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "build calculator",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-std=c++17",
+                "-g",
+                "calculator_serve.cpp",
+                "-o",
+                "calculator",
+                "-Wall",
+                "-Wextra"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/HttpServe"
+            },
+            "group": "build",
+            "problemMatcher": ["$gcc"]
+        }
+    ]
+}
