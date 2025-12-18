@@ -17,4 +17,5 @@ public:
     void set_header(const std::string &key, const std::string &value);
     std::string code_status(); // 根据状态码设置状态行
     std::string makeResponse();
+    int get_code() const;
 };

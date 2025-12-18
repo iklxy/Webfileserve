@@ -47,3 +47,8 @@ std::string HttpResponse::makeResponse()
     ss << body_;
     return ss.str();
 }
+
+int HttpResponse::get_code() const
+{
+    return code_;
+}

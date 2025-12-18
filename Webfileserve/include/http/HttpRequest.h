@@ -31,9 +31,13 @@ private:
     std::string url_;
     std::string version_;
     std::unordered_map<std::string, std::string> headers_; // 存储请求头
+    std::string content_;                                  // 存储请求体
 
     CheckState check_state = CheckState::REQUEST_LINE; // 当前状态机的状态
     std::string buffer_;                               // 存储请求数据的缓冲区
+
+    size_t content_length = 0; // 存储请求体的长度
+    bool is_POST = false;      // 是否为POST请求
 
 public:
     HttpRequest() = default;
