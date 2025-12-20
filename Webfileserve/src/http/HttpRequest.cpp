@@ -2,6 +2,16 @@
 #include <sstream>
 #include <iostream>
 
+void HttpRequest::init()
+{
+    method_ = url_ = version_ = content_ = "";
+    check_state = CheckState::REQUEST_LINE;
+    headers_.clear();
+    content_length = 0;
+    is_POST = false;
+    buffer_.clear();
+}
+
 HttpCode HttpRequest::parse()
 {
     HttpCode ret = HttpCode::NO_REQUEST;

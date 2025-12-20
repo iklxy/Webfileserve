@@ -1,5 +1,7 @@
 #pragma once
 #include "socket.h"
+#include "../include/epoll/Epoll.h"
+#include "../include/http/HttpConn.h"
 #include <string>
 class webserve
 {
@@ -17,4 +19,8 @@ private:
     void handle_client(int clientfd);
     // 文件资源路径
     std::string srcDir;
+    // epoll
+    Epoll *epoll_;
+    // 连接数组
+    HttpConn *users_;
 };

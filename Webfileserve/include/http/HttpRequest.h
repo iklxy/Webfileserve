@@ -43,6 +43,7 @@ public:
     HttpRequest() = default;
     ~HttpRequest() = default;
 
+    void init(); // 重置状态
     HttpCode parse();
     std::string get_method() const { return method_; }
     std::string get_url() const { return url_; }
