@@ -2,6 +2,7 @@
 #include "socket.h"
 #include "../include/epoll/Epoll.h"
 #include "../include/http/HttpConn.h"
+#include "../include/threadpoll/threadpool.h"
 #include <string>
 class webserve
 {
@@ -23,4 +24,10 @@ private:
     Epoll *epoll_;
     // 连接数组
     HttpConn *users_;
+    // 线程池
+    ThreadPool *threadpool_;
+    // 子线程处理读事件
+    void Onread(int fd);
+    // 子线程处理写事件
+    void Onwrite(int fd);
 };

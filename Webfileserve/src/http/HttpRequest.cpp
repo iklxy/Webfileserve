@@ -152,6 +152,17 @@ HttpCode HttpRequest::parse_headers(const std::string &line)
             return HttpCode::BAD_REQUEST;
         }
     }
+    else if (key == "Connection")
+    {
+        if (value == "keep-alive")
+        {
+            isKeepAlive_ = true;
+        }
+        else if (value == "close")
+        {
+            isKeepAlive_ = false;
+        }
+    }
     return HttpCode::NO_REQUEST;
 }
 // 解析请求体

@@ -35,4 +35,8 @@ public:
     static int epollfd_;
     // 根资源目录
     static std::string srcDir;
+    // 返回writebuffer的字节
+    size_t toWriteBytes() const { return writebuffer_.size(); }
+    // 是否保持连接
+    bool isKeepAlive() const { return request_.isKeepAlive(); }
 };

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资源下载 - 洋ouo的服务器</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            text-align: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            width: 80%;
+            max-width: 600px;
+            animation: fadeIn 1.5s ease-out;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 标签页样式 */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 5px;
+            border-radius: 50px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 30px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .tab-btn:hover {
+            color: white;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #764ba2;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 文件列表样式 */
+        .file-list {
+            display: none;
+            text-align: left;
+            background: rgba(0, 0, 0, 0.15);
+            padding: 10px;
+            border-radius: 15px;
+            min-height: 200px;
+        }
+
+        .file-list.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+
+        .file-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        .download-btn {
+            background: #00ff88;
+            color: #1a472a;
+            padding: 8px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .download-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 10px 25px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>资源下载</h1>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('code')">Code</button>
+            <button class="tab-btn" onclick="showTab('photo')">Photo</button>
+            <button class="tab-btn" onclick="showTab('document')">Document</button>
+        </div>
+
+        <!-- Code 列表 -->
+        <div id="code" class="file-list active">
+            <div class="file-item">
+                <div class="file-info">
+                    <span>⚡</span>
+                    <span>test.cpp</span>
+                </div>
+                <!-- download 属性指示浏览器下载而非打开 -->
+                <a href="/code/test.cpp" download class="download-btn">下载</a>
+            </div>
+        </div>
+
+        <!-- Photo 列表 -->
+        <div id="photo" class="file-list">
+            <div class="file-item">
+                <div class="file-info">
+                    <span>🖼️</span>
+                    <span>test.jpg</span>
+                </div>
+                <a href="/photo/test.jpg" download class="download-btn">下载</a>
+            </div>
+        </div>
+
+        <!-- Document 列表 -->
+        <div id="document" class="file-list">
+            <div class="file-item">
+                <div class="file-info">
+                    <span>📝</span>
+                    <span>test.txt</span>
+                </div>
+                <a href="/document/test.txt" download class="download-btn">下载</a>
+            </div>
+        </div>
+
+        <div>
+            <a href="/" class="btn">🔙 返回首页</a>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // 隐藏所有列表
+            document.querySelectorAll('.file-list').forEach(el => el.classList.remove('active'));
+            // 取消所有按钮激活状态
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            // 显示选中列表
+            document.getElementById(tabName).classList.add('active');
+
+            // 激活对应按钮
+            // 这里简单通过遍历匹配文本来激活，或者直接通过点击事件传参优化
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(tabName)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

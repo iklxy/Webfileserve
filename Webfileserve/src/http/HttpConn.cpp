@@ -79,10 +79,15 @@ ssize_t HttpConn::read(int *saveErrno)
         request_.append_buffer(line);
         total_len += len;
     }
-    // 如果读到了数据，或者是因为EAGAIN结束的，都算成功
-    if (total_len > 0 || (len == -1 && *saveErrno == EAGAIN))
+    // 如果读到了数据，则返回数据长度
+    if (total_len > 0)
     {
         return total_len;
+    }
+    // 如果没读到数据且是EAGAIN，返回-1，且saveErrno为EAGAIN
+    if (len == -1 && *saveErrno == EAGAIN)
+    {
+        return -1;
     }
     return len;
 }
@@ -108,7 +113,9 @@ ssize_t HttpConn::write(int *saveErrno)
             }
             return -1;
         }
-        // 记录已经发送的数据
+        // 擦除已经发送的数据
+        writebuffer_.erase(0, len);
+        // 发送数据成功 记录已经发送的数据
         total_len += len;
     }
     return total_len;

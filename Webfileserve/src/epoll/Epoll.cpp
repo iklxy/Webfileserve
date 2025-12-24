@@ -29,7 +29,8 @@ bool Epoll::addfd(int fd, uint32_t events)
         return false;
     struct epoll_event ev;
     ev.data.fd = fd;
-    ev.events = events;
+    ev.events = events | EPOLLET;
+    // 新增EpollONESHOT，防止一个文件描述符被多个线程同时处理
     return epoll_ctl(epollfd_, EPOLL_CTL_ADD, fd, &ev);
 }
 
@@ -40,7 +41,8 @@ bool Epoll::modfd(int fd, uint32_t events)
         return false;
     struct epoll_event ev;
     ev.data.fd = fd;
-    ev.events = events;
+    ev.events = events | EPOLLONESHOT | EPOLLET;
+    // 新增EpollONESHOT，防止一个文件描述符被多个线程同时处理
     return epoll_ctl(epollfd_, EPOLL_CTL_MOD, fd, &ev);
 }
 
@@ -63,7 +65,7 @@ int Epoll::wait(int timeout)
 // 获取事件发生的文件描述符
 int Epoll::get_event_fd(int index) const
 {
-    if (index < 0 || index >= events_.size())
+    if (index < 0 || index >= (int)events_.size())
         return -1;
     return events_[index].data.fd;
 }
@@ -71,7 +73,7 @@ int Epoll::get_event_fd(int index) const
 // 获取事件发生的事件
 uint32_t Epoll::get_event_events(int index) const
 {
-    if (index < 0 || index >= events_.size())
+    if (index < 0 || index >= (int)events_.size())
         return 0;
     return events_[index].events;
 }

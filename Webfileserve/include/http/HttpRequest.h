@@ -38,6 +38,7 @@ private:
 
     size_t content_length = 0; // 存储请求体的长度
     bool is_POST = false;      // 是否为POST请求
+    bool isKeepAlive_ = false; // 是否保持连接
 
 public:
     HttpRequest() = default;
@@ -57,4 +58,6 @@ public:
     HttpCode parse_headers(const std::string &line);
     // 解析请求体
     HttpCode parse_content(const std::string &line);
+    // 是否保持连接
+    bool isKeepAlive() const { return isKeepAlive_; }
 };
