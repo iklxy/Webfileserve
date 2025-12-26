@@ -78,6 +78,24 @@
             padding: 10px;
             border-radius: 15px;
             min-height: 200px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        /* 自定义滚动条 */
+        .file-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        .file-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        .file-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+        .file-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
         }
 
         .file-list.active {
@@ -164,14 +182,7 @@
 
         <!-- Code 列表 -->
         <div id="code" class="file-list active">
-            <div class="file-item">
-                <div class="file-info">
-                    <span>⚡</span>
-                    <span>test.cpp</span>
-                </div>
-                <!-- download 属性指示浏览器下载而非打开 -->
-                <a href="/code/test.cpp" download class="download-btn">下载</a>
-            </div>
+            <!-- 列表内容将由 JavaScript 动态生成 -->
         </div>
 
         <!-- Photo 列表 -->
@@ -202,6 +213,34 @@
     </div>
 
     <script>
+        // 动态生成 Code 文件列表
+        (function() {
+            const codeContainer = document.getElementById('code');
+            // HW0: 1-4, HW1: 1-5, HW2: 1-5, HW3: 1-7, HW4: 1-6, HW5: 1-6
+            const hwConfig = [4, 5, 5, 7, 6, 6]; 
+
+            hwConfig.forEach((count, hwIndex) => {
+                for (let i = 1; i <= count; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'file-item';
+                    
+                    // 显示名称和下载文件名: HWx-y
+                    const displayName = `HW${hwIndex}-${i}`;
+                    // 实际文件路径: /code/HWx/y/1.cpp
+                    const filePath = `/code/HW${hwIndex}/${i}/1.cpp`;
+                    
+                    item.innerHTML = `
+                        <div class="file-info">
+                            <span>⚡</span>
+                            <span>${displayName}</span>
+                        </div>
+                        <a href="${filePath}" download="${displayName}.cpp" class="download-btn">下载</a>
+                    `;
+                    codeContainer.appendChild(item);
+                }
+            });
+        })();
+
         function showTab(tabName) {
             // 隐藏所有列表
             document.querySelectorAll('.file-list').forEach(el => el.classList.remove('active'));
