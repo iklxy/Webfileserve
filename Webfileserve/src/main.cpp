@@ -1,20 +1,33 @@
 #include "../include/serve/webserve.h"
+#include "../include/log/log.h"
+#include "../include/serve/config.h"
 #include <iostream>
 #include <signal.h>
 
-int main()
+int main(int argc, char *argv[])
 {
-    // 忽略SIGPIPE信号，防止写入已关闭的socket导致进程退出
+    // 配置类
+    Config config;
+    config.parse_arg(argc, argv);
+
+    // 初始化日志系统
+    Log::Instance()->init(config.LOGLevel, "./log", ".log", 1024);
+
+    if (!config.openLog)
+    {
+        Log::Instance()->init(0, "./log", ".log", 1024);
+    }
+
     signal(SIGPIPE, SIG_IGN);
 
     try
     {
-        webserve lxy_serve("192.168.64.5", 8080);
+        webserve lxy_serve(config);
         lxy_serve.start();
     }
     catch (const std::exception &e)
     {
-        std::cerr << "Error: " << e.what() << std::endl;
+        LOG_ERROR("Error: %s", e.what());
     }
     return 0;
 }

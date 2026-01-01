@@ -1,6 +1,7 @@
 #include "../include/http/HttpConn.h"
-#include "../include/epoll/Epoll.h" // 需要用到 epoll_ctl
-#include "../include/utils/utils.h" // setNonBlocking
+#include "../include/epoll/Epoll.h"
+#include "../include/utils/utils.h"
+#include "../include/log/log.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <iostream>
@@ -35,6 +36,14 @@ HttpConn::~HttpConn()
     closeConn();
 }
 
+void HttpConn::unmapFile()
+{
+    if (mmFile_)
+    {
+        munmap(mmFile_, fileStat_.st_size);
+        mmFile_ = nullptr;
+    }
+}
 // 初始化连接
 void HttpConn::init(int fd, const struct sockaddr_in &addr)
 {
@@ -43,7 +52,6 @@ void HttpConn::init(int fd, const struct sockaddr_in &addr)
     isConnected_ = true;
     writebuffer_.clear();
     request_.init();
-    // response_.init(); // HttpResponse目前比较简单，每次process都会重新设置，暂时可以不重置
     set_nonblocking(fd_);
 }
 
@@ -55,7 +63,8 @@ void HttpConn::closeConn()
         isConnected_ = false;
         epoll_ctl(epollfd_, EPOLL_CTL_DEL, fd_, 0);
         close(fd_);
-        std::cout << "Client disconnected, fd: " << fd_ << std::endl;
+        unmapFile();
+        LOG_INFO("Client disconnected, fd: %d", fd_);
         fd_ = -1;
     }
 }
@@ -75,7 +84,7 @@ ssize_t HttpConn::read(int *saveErrno)
             break;
         }
         // 读取到数据，追加到请求缓冲区
-        std::string line(buffer, len); // 修正：只构造实际读取长度的string
+        std::string line(buffer, len);
         request_.append_buffer(line);
         total_len += len;
     }
@@ -96,29 +105,48 @@ ssize_t HttpConn::read(int *saveErrno)
 ssize_t HttpConn::write(int *saveErrno)
 {
     ssize_t len = -1;
-    const char *buffer = writebuffer_.c_str();
-    // 用于记录发送了多少数据
-    size_t total_len = 0;
-
-    while (total_len < writebuffer_.size())
+    while (true)
     {
-        len = ::write(fd_, buffer + total_len, writebuffer_.size() - total_len);
-        if (len == -1)
+        len = writev(fd_, iov_, iovCnt_);
+
+        if (len <= 0)
         {
             *saveErrno = errno;
-            if (*saveErrno == EAGAIN)
-            {
-                // 说明资源不可用 而这在边缘触发模式下是正常的 先不考虑 先退出
-                break;
-            }
+            if (len == -1 && *saveErrno == EAGAIN)
+                break; // 缓冲区满，下次再来
             return -1;
         }
-        // 擦除已经发送的数据
-        writebuffer_.erase(0, len);
-        // 发送数据成功 记录已经发送的数据
-        total_len += len;
+        // 检查是否所有数据都发完了
+        if (iov_[0].iov_len + iov_[1].iov_len == 0)
+        {
+            unmapFile(); // 发送完毕，解除映射
+            break;
+        }
+
+        // 如果这次发送的数据 超过了 头部长度
+        if (static_cast<size_t>(len) >= iov_[0].iov_len)
+        {
+            // 说明头部发完了，Body 发了一部分
+            size_t body_sent = len - iov_[0].iov_len; // 算出 Body 发了多少
+
+            // 调整 Body 的指针和长度
+            iov_[1].iov_base = (uint8_t *)iov_[1].iov_base + body_sent;
+            iov_[1].iov_len -= body_sent;
+
+            // 头部清零
+            if (iov_[0].iov_len)
+            {
+                writebuffer_.clear();
+                iov_[0].iov_len = 0;
+            }
+        }
+        else
+        {
+            iov_[0].iov_base = (uint8_t *)iov_[0].iov_base + len;
+            iov_[0].iov_len -= len;
+        }
     }
-    return total_len;
+    return len;
 }
 
 // process
@@ -141,39 +169,59 @@ bool HttpConn::process()
         }
         // 检查文件是否存在
         std::string filepath = srcDir + path;
-        struct stat fileStat;
-        if (stat(filepath.c_str(), &fileStat) < 0)
+
+        if (stat(filepath.c_str(), &fileStat_) < 0)
         {
             response_.set_code(404);
             filepath = srcDir + "/404.html";
+            stat(filepath.c_str(), &fileStat_);
         }
-        else if (!S_ISREG(fileStat.st_mode)) // 判断是否为普通文件 如果不是普通文件 则返回403
+        else if (!S_ISREG(fileStat_.st_mode)) // 判断是否为普通文件 如果不是普通文件 则返回403
         {
             response_.set_code(403);
             filepath = srcDir + "/403.html";
+            stat(filepath.c_str(), &fileStat_);
         }
         else
         {
             response_.set_code(200);
         }
 
-        std::fstream file(filepath, std::ios::in | std::ios::binary);
-        if (!file.is_open())
+        int srcFd = open(filepath.c_str(), O_RDONLY);
+        if (srcFd < 0)
         {
+            // 极其罕见的情况：文件存在但打不开
             response_.set_code(500);
             response_.set_body("<html><body><h1>500 Internal Server Error</h1></body></html>");
+            writebuffer_ = response_.makeResponse();
+            iov_[0].iov_base = (char *)writebuffer_.c_str();
+            iov_[0].iov_len = writebuffer_.size();
+            iovCnt_ = 1;
+            return true;
         }
-        else
-        {
-            std::stringstream ss;
-            ss << file.rdbuf();
-            response_.set_body(ss.str());
-            std::string mimeType = getMimeType(path);
-            response_.set_header("Content-Type", mimeType);
-        }
-        file.close();
-        // 构建 HTTP 响应
+
+        // mmap 零拷贝：将磁盘文件直接映射到内存
+        // MAP_PRIVATE 建立写时复制页
+        mmFile_ = (char *)mmap(0, fileStat_.st_size, PROT_READ, MAP_PRIVATE, srcFd, 0);
+        close(srcFd); // 映射建立后，文件描述符就可以关了
+
+        // 构建响应头
+        response_.set_body(""); // Body 不需要放入 string 了
+        response_.set_header("Content-Type", getMimeType(path));
+        response_.set_header("Content-Length", std::to_string(fileStat_.st_size));
+
         writebuffer_ = response_.makeResponse();
+
+        // 填充 iovec 结构体 (分散写)
+        // 第一块：响应头 (在堆内存/栈内存的 string 里)
+        iov_[0].iov_base = (char *)writebuffer_.c_str();
+        iov_[0].iov_len = writebuffer_.size();
+
+        // 文件内容 (在 mmap 的内存里)
+        iov_[1].iov_base = mmFile_;
+        iov_[1].iov_len = fileStat_.st_size;
+
+        iovCnt_ = 2; // 发送两块数据
         return true;
     }
     return false;
