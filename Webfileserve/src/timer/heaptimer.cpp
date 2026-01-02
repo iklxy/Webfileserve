@@ -13,16 +13,15 @@ void HeapTimer::swapNode_(size_t i, size_t j)
 void HeapTimer::siftup_(size_t i)
 {
     assert(i >= 0 && i < heap_.size());
-    size_t j = (i - 1) / 2; // 父节点索引
-    while (j >= 0)
+    while (i > 0)
     {
+        size_t j = (i - 1) / 2; // 父节点索引
         if (heap_[j] < heap_[i])
         {
             break;
         } // 父节点小，满足堆性质，停止
         swapNode_(i, j);
         i = j;
-        j = (i - 1) / 2;
     }
 }
 
