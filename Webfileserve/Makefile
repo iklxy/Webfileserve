@@ -1,13 +1,12 @@
 # 1. 编译器设置
 CXX = g++
-# 2. 编译选项：增加了 -pthread
+# 2. 编译选项
 CXXFLAGS = -std=c++11 -Wall -g -pthread -I include
 
 # 3. 目标文件名
 TARGET = webfileserver
 
-# 4. 源文件列表：增加了 src/log/Log.cpp
-# 为了美观，我用 \ 换行了，逻辑是一样的
+# 4. 源文件列表
 SRCS = src/main.cpp \
        src/serve/InetAddress.cpp \
        src/serve/socket.cpp \
