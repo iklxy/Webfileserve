@@ -15,7 +15,7 @@ Config::Config()
     // 数据库默认配置
     SQLPort = 3306;
     SQLUser = "root";
-    SQLPwd = "your_password";
+    SQLPwd = "YY010303";
     DBName = "webdb";
     ConnPoolNum = 12;
 
