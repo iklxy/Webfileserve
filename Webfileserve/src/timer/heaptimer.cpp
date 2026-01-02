@@ -96,21 +96,28 @@ void HeapTimer::doWork(int id)
 }
 
 // 删除指定位置的节点
-void HeapTimer::del_(size_t index)
+void HeapTimer::del_(size_t i)
 {
-    assert(!heap_.empty() && index >= 0 && index < heap_.size());
-    size_t i = index;
+    /* 1. 先检查是否为空，或者索引是否越界 */
+    if (heap_.empty() || i >= heap_.size())
+    {
+        return;
+    }
+
+    /* 2. 获取最后一个元素的索引 */
     size_t n = heap_.size() - 1;
-    assert(i <= n);
+
+    /* 3. 如果要删除的不是最后一个元素，才需要交换 */
     if (i < n)
     {
-        swapNode_(i, n);
+        swapNode_(i, n); // 把要删除的节点换到队尾
         if (!siftdown_(i, n))
-        {
+        { // 调整堆结构
             siftup_(i);
         }
     }
-    // 删除堆尾元素
+
+    /* 4. 删除队尾元素 */
     ref_.erase(heap_.back().id);
     heap_.pop_back();
 }
